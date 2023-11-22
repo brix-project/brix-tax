@@ -1,0 +1,38 @@
+{
+    "name": "brixlab/tax",
+    "type": "project",
+    "description": "Spool and send Mails",
+    "keywords": ["Brix"],
+    "homepage": "https://infracamp.org",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Matthias Leuffen",
+            "email": "matthes@leuffen.de"
+        }
+    ],
+    "require": {
+        "brixlab/core": "dev-main",
+        "lack/openai": "dev-main",
+        "smalot/pdfparser": "dev-master"
+    },
+
+    "require-dev": {
+        "brixlab/coder": "dev-main"
+    },
+    "autoload": {
+        "psr-4": {
+            "Brix\\Tax\\": "src"
+        },
+        "files": [
+            "src/bootstrap.php"
+        ]
+    },
+    "minimum-stability": "dev",
+    "config": {
+        "preferred-install": "source",
+        "allow-plugins": {
+            "php-http/discovery": false
+        }
+    }
+}

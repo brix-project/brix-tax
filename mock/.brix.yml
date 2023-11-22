@@ -1,0 +1,7 @@
+version: '1.0'
+
+
+tax:
+    scan_dir: './documents'
+    my_vat_id: 'DE353214420'        # VAT ID of me - used to classify inbound / outbound invoices
+
