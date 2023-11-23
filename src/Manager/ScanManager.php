@@ -25,8 +25,12 @@ class ScanManager
             return null;
         }
 
+        /**
         $parser = new Parser();
         $invoiceText = $parser->parseFile($file)->getText();
+*/
+        $invoiceText = phore_exec("pdftotext :file -", ["file" => $file]);
+
 
         $aiClient = $this->openAi;
         $taxConfig = $aiClient->promptDataStruct($invoiceText, T_TaxMeta::class);

@@ -36,18 +36,19 @@ class JournalManager
         $j->recipientName = $meta->recipientName;
         $j->invoiceNumber = $meta->invoiceNumber;
 
-        if ($this->isOwnVatNr($meta->senderVatNumber)) {
+        if ( ! $this->isOwnVatNr($meta->senderVatNumber)) {
+            // Foreign Invoice -> add to debit
             $j->net_amount_debit = $meta->invoiceNet;
             $j->vat_debit = $meta->invoiceVatTotal;
             $j->net_amount_credit = null;
             $j->vat_credit = null;
-            $j->type = "outbound invoice";
+            $j->type = "inbound invoice";
         } else {
             $j->net_amount_credit = $meta->invoiceNet;
             $j->vat_credit = $meta->invoiceVatTotal;
             $j->net_amount_debit = null;
             $j->vat_debit = null;
-            $j->type = "inbound invoice";
+            $j->type = "outbound invoice";
         }
 
 
@@ -65,6 +66,24 @@ class JournalManager
         usort($this->journal, function(T_TaxJournal $a, T_TaxJournal $b) {
             return strcmp($a->date, $b->date);
         });
+    }
+
+    /**
+     * @param $year
+     * @param $month
+     * @return T_TaxJournal[]
+     */
+    public function getJournal(int $year=null, int $month=null) : array {
+        $this->sort();
+        $ret = [];
+        foreach ($this->journal as $entry) {
+            if ($year !== null && (int)substr($entry->date, 0, 4) !== $year)
+                continue;
+            if ($month !== null && (int)substr($entry->date, 5, 2) !== $month)
+                continue;
+            $ret[] = $entry;
+        }
+        return $ret;
     }
 
     public function updateJournal($file, $year=null) {
