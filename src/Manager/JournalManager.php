@@ -87,6 +87,7 @@ class JournalManager
     }
 
     public function updateJournal($file, $year=null) {
+        $this->sort();
         $data = $this->journal;
         // Skip all entries that are not in the given year
         if ($year !== null) {
