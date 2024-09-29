@@ -14,8 +14,7 @@
     "require": {
         "ext-xml": "*",
         "brixlab/core": "dev-main",
-        "lack/openai": "dev-main",
-        "smalot/pdfparser": "dev-master"
+        "micx/docfusion-sdk": "dev-main"
     },
 
     "require-dev": {
