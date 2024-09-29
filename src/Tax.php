@@ -3,6 +3,7 @@
 namespace Brix\Tax;
 
 use Brix\Core\AbstractBrixCommand;
+use Brix\Tax\Analytics\AccountOverview;
 use Brix\Tax\Analytics\TaxOverview;
 use Brix\Tax\Manager\JournalManager;
 use Brix\Tax\Manager\ScanManager;
@@ -77,5 +78,19 @@ class Tax extends AbstractBrixCommand
         Out::Table($analytics->process($journalManager, $year));
 
     }
+    public function account_overview (int $year = null) {
+        if ($year === null) {
+            $year = date("Y");
+        }
+        $journalManager = new JournalManager($this->config->my_vat_id);
+        foreach($this->scanDir->genWalk("*.tax.yml", true) as $file) {
+            $meta = phore_file($file)->get_yaml(T_TaxMeta::class);
+            $journalManager->addEntry($meta);
+        }
 
+        $analytics = new AccountOverview();
+
+        Out::Table($analytics->process($journalManager, $year));
+
+    }
 }
