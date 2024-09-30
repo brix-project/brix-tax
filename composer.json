@@ -12,7 +12,6 @@
         }
     ],
     "require": {
-        "ext-xml": "*",
         "brixlab/core": "dev-main",
         "micx/docfusion-sdk": "dev-main"
     },

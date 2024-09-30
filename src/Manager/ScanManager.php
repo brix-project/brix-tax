@@ -4,6 +4,8 @@ namespace Brix\Tax\Manager;
 use Brix\Tax\Type\T_TaxConfig;
 use Brix\Tax\Type\T_TaxMeta;
 use Lack\OpenAi\LackOpenAiFacet;
+use Micx\SDK\Docfusion\DocfusionClient;
+use Micx\SDK\Docfusion\DocfusionFacade;
 use Phore\FileSystem\PhoreDirectory;
 use Phore\FileSystem\PhoreFile;
 use Smalot\PdfParser\Parser;
@@ -11,7 +13,7 @@ use Smalot\PdfParser\Parser;
 class ScanManager
 {
 
-    public function __construct(public LackOpenAiFacet $openAi)
+    public function __construct(public DocfusionClient $docfusionClient)
     {
     }
 
@@ -25,16 +27,14 @@ class ScanManager
             return null;
         }
 
-        /**
-        $parser = new Parser();
-        $invoiceText = $parser->parseFile($file)->getText();
-*/
-        $invoiceText = phore_exec("pdftotext :file -", ["file" => $file]);
+        
+        $docfusionFacade = new DocfusionFacade($this->docfusionClient);
 
+        
 
-        $aiClient = $this->openAi;
-        $taxConfig = $aiClient->promptDataStruct($invoiceText, T_TaxMeta::class);
+        $taxConfig = $docfusionFacade->promptFileWithCast($file->getUri(), cast: T_TaxMeta::class);
 
+        
         $taxConfig->file = $file->getUri();
 
         $metaFile->set_yaml((array)$taxConfig);

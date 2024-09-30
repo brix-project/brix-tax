@@ -9,6 +9,8 @@ use Brix\Tax\Manager\JournalManager;
 use Brix\Tax\Manager\ScanManager;
 use Brix\Tax\Type\T_TaxConfig;
 use Brix\Tax\Type\T_TaxMeta;
+use Lack\Keystore\KeyStore;
+use Micx\SDK\Docfusion\DocfusionClient;
 use Phore\Cli\Output\Out;
 use Phore\FileSystem\PhoreDirectory;
 
@@ -32,7 +34,7 @@ class Tax extends AbstractBrixCommand
     public function scan() {
 
 
-        $scanManager = new ScanManager($this->brixEnv->getOpenAiQuickFacet());
+        $scanManager = new ScanManager(new DocfusionClient(KeyStore::Get()->getAccessKey("docfusion_subscription"), KeyStore::Get()->getAccessKey("docfusion")));
         foreach ($this->scanDir->genWalk("*.pdf", true) as $file) {
             echo "\nScanning: $file";
             $data = $scanManager->scan($file);
