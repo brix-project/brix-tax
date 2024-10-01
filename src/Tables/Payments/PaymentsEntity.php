@@ -31,7 +31,7 @@ class PaymentsEntity
 
         public float $amount,
 
-        public float $currency,
+        public string $currency,
 
 
         public float $amountOrig,
@@ -48,5 +48,11 @@ class PaymentsEntity
     {
 
     }
+
+    public string $invoiceFile = '';
+
+    public float $invoiceDiff;
+
+    public string $comment = '';
 
 }

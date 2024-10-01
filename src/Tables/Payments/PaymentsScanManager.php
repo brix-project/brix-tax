@@ -4,6 +4,7 @@ namespace Brix\Tax\Tables\Payments;
 
 use Brix\Core\Type\BrixEnv;
 use Brix\Tax\Helper\PaymentsScanner;
+use Brix\Tax\Type\T_TaxConfig;
 use Phore\Cli\Output\Out;
 use Phore\FileSystem\PhoreDirectory;
 
@@ -16,8 +17,9 @@ class PaymentsScanManager
 
     public function __construct(private BrixEnv $env)
     {
-        $this->paymentsDir = $this->env->rootDir->join($this->env->brixConfig->get("payments_dir", "./payments"))->assertDirectory(true);
-        $this->paymentsTable = new PaymentsTable($this->env->rootDir->withFileName("payments.csv")->touch());
+        $config = $this->env->brixConfig->get("tax", T_TaxConfig::class);
+        $this->paymentsDir = $this->env->rootDir->join($config->payments_dir)->assertDirectory(true);
+        $this->paymentsTable = new PaymentsTable(PaymentsEntity::class, $this->env->rootDir->withFileName("payments.csv")->touch());
     }
 
 

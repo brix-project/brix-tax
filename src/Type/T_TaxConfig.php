@@ -8,7 +8,7 @@ class T_TaxConfig
     /**
      * @var string
      */
-    public string $scan_dir = "./documents";
+    public string $documents_dir = "./documents";
 
     public string $payments_dir = "./payments";
 

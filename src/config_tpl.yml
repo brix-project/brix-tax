@@ -1,4 +1,5 @@
 tax:
-    scan_dir: './documents'
+    documents_dir: './documents'
+    payments_dir: './pamynets'
     my_vat_id: 'DE123456789'        # VAT ID of me - used to classify inbound / outbound invoices
 
