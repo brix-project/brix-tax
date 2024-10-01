@@ -29,6 +29,8 @@ class T_TaxMeta
      * 
      * If neither VAT Number nor Steuernummer is available, set to empty string
      * 
+     * If there are multiple VAT Numbers on the document, take the one from the footer!
+     * 
      * @var string
      */
     public $senderVatNumber;

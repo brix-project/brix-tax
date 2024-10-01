@@ -47,21 +47,23 @@ class Tax extends AbstractBrixCommand
         // Query for VAT ID
         $supplier = $this->accountsSuppliersTable->getSupplierByVatNr($data->senderVatNumber);
         if ($supplier === null) {
-            $entity = new AccountsSuppliersEntity(supplierId: null, name: $data->senderName, vatId: $data->senderVatNumber, lastSeen: date("Y-m-d", strtotime($data->invoiceDate)));
-            $entity->supplierId = $entity->getNewSupplierId($this->accountsSuppliersTable, $data->senderName);
-            $this->accountsSuppliersTable->addObject($entity);
+            $supplier = new AccountsSuppliersEntity(supplierId: null, name: $data->senderName, vatId: $data->senderVatNumber, lastSeen: date("Y-m-d", strtotime($data->invoiceDate)));
+            $supplier->supplierId = $supplier->getNewSupplierId($this->accountsSuppliersTable, $data->senderName);
+            $this->accountsSuppliersTable->addObject($supplier);
             $this->accountsSuppliersTable->sort("supplierId");
             $this->accountsSuppliersTable->save();
-            Out::TextSuccess("Added new supplier: " . $entity->supplierId);
+            Out::TextSuccess("Added new supplier: " . $supplier->supplierId);
         }
         $invYear = date("Y", strtotime($data->invoiceDate));
         $invDate = date("Y-m-d", strtotime($data->invoiceDate));
-        $targetOrigFile = "{$this->brixEnv->rootDir}/{$this->config->scan_dir}/{$invYear}/{$supplier->supplierId}/{$invDate}-{$data->invoiceNumber}.{$origFileExt}";
+        $invoiceNumberSlug = preg_replace("/[^a-zA-Z0-9]/", "", $data->invoiceNumber);
+        $targetOrigFile = "{$this->brixEnv->rootDir}/{$this->config->scan_dir}/{$invYear}/{$supplier->supplierId}/{$invDate}__{$invoiceNumberSlug}.{$origFileExt}";
         $targetMetaFile = $targetOrigFile . ".tax.yml";
         
         Out::TextInfo("Moving: $origFile -> $targetOrigFile");
-        phore_file($origFile)->move($targetOrigFile);
-        phore_file($yamlFile)->move($targetMetaFile);
+        phore_file($targetOrigFile)->getDirname()->assertDirectory(true);
+        phore_file($origFile)->rename($targetOrigFile);
+        phore_file($yamlFile)->rename($targetMetaFile);
         
     }
     
