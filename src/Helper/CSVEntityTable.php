@@ -67,7 +67,7 @@ class CSVEntityTable
         $this->columnOrder = $header;
 
         while (($row = fgetcsv($handle)) !== false) {
-          
+
             if (count($row) === 1 && $row[0] === null) {
                 continue; // Skip empty rows
             }
@@ -168,10 +168,24 @@ class CSVEntityTable
         foreach ($this->data as $object) {
             $match = true;
             foreach ($conditions as $property => $value) {
-                if (!property_exists($object, $property) || $object->$property != $value) {
+
+                if (!property_exists($object, $property)) {
                     $match = false;
                     break;
                 }
+                $propertyValue = $object->$property;
+
+                // Allow comparison of floats
+                if (is_float($propertyValue) || is_float($value)) {
+                    $propertyValue = number_format($propertyValue, 2, '.', '');
+                    $value = number_format($value, 2, '.', '');
+                }
+
+                if ($propertyValue != $value) {
+                    $match = false;
+                    break;
+                }
+
             }
             if ($match) {
                 $results[] = $object;
@@ -192,7 +206,7 @@ class CSVEntityTable
         if (count($results) === 0) {
             return null;
         }
-        return $results[0];        
+        return $results[0];
     }
 
     public function sort(string $column, string $order = 'ASC'): void

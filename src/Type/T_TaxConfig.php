@@ -10,6 +10,7 @@ class T_TaxConfig
      */
     public string $scan_dir = "./documents";
 
+    public string $payments_dir = "./payments";
 
     /**
      * @var string

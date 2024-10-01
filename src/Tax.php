@@ -9,6 +9,7 @@ use Brix\Tax\Manager\JournalManager;
 use Brix\Tax\Manager\ScanManager;
 use Brix\Tax\Tables\AccountsSuppliers\AccountsSuppliersEntity;
 use Brix\Tax\Tables\AccountsSuppliers\AccountsSuppliersTable;
+use Brix\Tax\Tables\Payments\PaymentsScanManager;
 use Brix\Tax\Type\T_TaxConfig;
 use Brix\Tax\Type\T_TaxMeta;
 use Lack\Keystore\KeyStore;
@@ -22,9 +23,9 @@ class Tax extends AbstractBrixCommand
     public T_TaxConfig $config;
 
     public PhoreDirectory $scanDir;
-    
+
     public AccountsSuppliersTable $accountsSuppliersTable;
-    
+
     public function __construct()
     {
         parent::__construct();
@@ -37,7 +38,7 @@ class Tax extends AbstractBrixCommand
         $this->accountsSuppliersTable = new AccountsSuppliersTable($this->brixEnv->rootDir->withFileName("accounts-suppliers.csv")->touch());
     }
 
-    
+
     private function removeEmptyDirectories($rootDir) {
         foreach (phore_dir($rootDir)->genWalk() as $dir) {
             if ( ! $dir->isDirectory())
@@ -49,13 +50,13 @@ class Tax extends AbstractBrixCommand
             $this->removeEmptyDirectories($dir);
         }
     }
-    
+
     private function indexDocument(string $yamlFile) {
         $origFile = preg_replace("/\.tax\.yml$/", "", $yamlFile);
         $origFileExt = pathinfo($origFile, PATHINFO_EXTENSION);
-        
+
         $data = phore_file($yamlFile)->get_yaml(T_TaxMeta::class);
-        
+
         // Query for VAT ID
         $supplier = $this->accountsSuppliersTable->getSupplierByVatNr($data->senderVatNumber);
         if ($supplier === null) {
@@ -71,15 +72,15 @@ class Tax extends AbstractBrixCommand
         $invoiceNumberSlug = preg_replace("/[^a-zA-Z0-9]/", "", $data->invoiceNumber);
         $targetOrigFile = "{$this->brixEnv->rootDir}/{$this->config->scan_dir}/{$invYear}/{$supplier->supplierId}/{$invDate}__{$invoiceNumberSlug}.{$origFileExt}";
         $targetMetaFile = $targetOrigFile . ".tax.yml";
-        
+
         Out::TextInfo("Moving: $origFile -> $targetOrigFile");
         phore_file($targetOrigFile)->getDirname()->assertDirectory(true);
         phore_file($origFile)->rename($targetOrigFile);
         phore_file($yamlFile)->rename($targetMetaFile);
-        
-       
+
+
     }
-    
+
     public function scan() {
         $scanManager = new ScanManager(new DocfusionClient(KeyStore::Get()->getAccessKey("docfusion_subscription"), KeyStore::Get()->getAccessKey("docfusion")));
         foreach ($this->scanDir->genWalk("*.*", true) as $file) {
@@ -93,7 +94,7 @@ class Tax extends AbstractBrixCommand
                 echo " - already scanned";
                 continue;
             }
-            
+
             $data = $scanManager->scan($file);
             if ($data === null) {
                 echo " - already scanned";
@@ -105,6 +106,12 @@ class Tax extends AbstractBrixCommand
         $this->accountsSuppliersTable->sort("supplierId");
         $this->accountsSuppliersTable->save();
         $this->removeEmptyDirectories($this->brixEnv->rootDir->withRelativePath($this->config->scan_dir));
+    }
+
+
+    public function payments_scan() {
+        $paymentsScanManager = new PaymentsScanManager($this->brixEnv);
+        $paymentsScanManager->scanPayments();
     }
 
 
