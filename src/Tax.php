@@ -38,6 +38,18 @@ class Tax extends AbstractBrixCommand
     }
 
     
+    private function removeEmptyDirectories($rootDir) {
+        foreach (phore_dir($rootDir)->genWalk() as $dir) {
+            if ( ! $dir->isDirectory())
+                continue;
+            if (count($dir->asDirectory()->getListSorted()) === 0) {
+                $dir->asDirectory()->rmDir();
+                continue;
+            }
+            $this->removeEmptyDirectories($dir);
+        }
+    }
+    
     private function indexDocument(string $yamlFile) {
         $origFile = preg_replace("/\.tax\.yml$/", "", $yamlFile);
         $origFileExt = pathinfo($origFile, PATHINFO_EXTENSION);
@@ -65,6 +77,7 @@ class Tax extends AbstractBrixCommand
         phore_file($origFile)->rename($targetOrigFile);
         phore_file($yamlFile)->rename($targetMetaFile);
         
+       
     }
     
     public function scan() {
@@ -91,7 +104,7 @@ class Tax extends AbstractBrixCommand
         }
         $this->accountsSuppliersTable->sort("supplierId");
         $this->accountsSuppliersTable->save();
-
+        $this->removeEmptyDirectories($this->brixEnv->rootDir->withRelativePath($this->config->scan_dir));
     }
 
 
