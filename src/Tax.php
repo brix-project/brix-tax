@@ -7,6 +7,8 @@ use Brix\Tax\Analytics\AccountOverview;
 use Brix\Tax\Analytics\TaxOverview;
 use Brix\Tax\Manager\JournalManager;
 use Brix\Tax\Manager\ScanManager;
+use Brix\Tax\Tables\AccountsSuppliers\AccountsSuppliersEntity;
+use Brix\Tax\Tables\AccountsSuppliers\AccountsSuppliersTable;
 use Brix\Tax\Type\T_TaxConfig;
 use Brix\Tax\Type\T_TaxMeta;
 use Lack\Keystore\KeyStore;
@@ -20,6 +22,9 @@ class Tax extends AbstractBrixCommand
     public T_TaxConfig $config;
 
     public PhoreDirectory $scanDir;
+    
+    public AccountsSuppliersTable $accountsSuppliersTable;
+    
     public function __construct()
     {
         parent::__construct();
@@ -29,21 +34,61 @@ class Tax extends AbstractBrixCommand
             file_get_contents(__DIR__ . "/config_tpl.yml")
         );
         $this->scanDir = $this->brixEnv->rootDir->withRelativePath($this->config->scan_dir)->assertDirectory(true);
+        $this->accountsSuppliersTable = new AccountsSuppliersTable($this->brixEnv->rootDir->withFileName("accounts-suppliers.csv")->touch());
     }
 
+    
+    private function indexDocument(string $yamlFile) {
+        $origFile = preg_replace("/\.tax\.yml$/", "", $yamlFile);
+        $origFileExt = pathinfo($origFile, PATHINFO_EXTENSION);
+        
+        $data = phore_file($yamlFile)->get_yaml(T_TaxMeta::class);
+        
+        // Query for VAT ID
+        $supplier = $this->accountsSuppliersTable->getSupplierByVatNr($data->senderVatNumber);
+        if ($supplier === null) {
+            $entity = new AccountsSuppliersEntity(supplierId: null, name: $data->senderName, vatId: $data->senderVatNumber, lastSeen: date("Y-m-d", strtotime($data->invoiceDate)));
+            $entity->supplierId = $entity->getNewSupplierId($this->accountsSuppliersTable, $data->senderName);
+            $this->accountsSuppliersTable->addObject($entity);
+            $this->accountsSuppliersTable->sort("supplierId");
+            $this->accountsSuppliersTable->save();
+            Out::TextSuccess("Added new supplier: " . $entity->supplierId);
+        }
+        $invYear = date("Y", strtotime($data->invoiceDate));
+        $invDate = date("Y-m-d", strtotime($data->invoiceDate));
+        $targetOrigFile = "{$this->brixEnv->rootDir}/{$this->config->scan_dir}/{$invYear}/{$supplier->supplierId}/{$invDate}-{$data->invoiceNumber}.{$origFileExt}";
+        $targetMetaFile = $targetOrigFile . ".tax.yml";
+        
+        Out::TextInfo("Moving: $origFile -> $targetOrigFile");
+        phore_file($origFile)->move($targetOrigFile);
+        phore_file($yamlFile)->move($targetMetaFile);
+        
+    }
+    
     public function scan() {
-
-
         $scanManager = new ScanManager(new DocfusionClient(KeyStore::Get()->getAccessKey("docfusion_subscription"), KeyStore::Get()->getAccessKey("docfusion")));
-        foreach ($this->scanDir->genWalk("*.pdf", true) as $file) {
+        foreach ($this->scanDir->genWalk("*.*", true) as $file) {
+            if ( ! preg_match("/\.(pdf|docx|doc|jpg|png|jpeg)$/", $file)) {
+                continue;
+            }
             echo "\nScanning: $file";
+            $metaFile = phore_file($file . ".tax.yml");
+            if ($metaFile->exists()) {
+                $this->indexDocument($metaFile);
+                echo " - already scanned";
+                continue;
+            }
+            
             $data = $scanManager->scan($file);
             if ($data === null) {
                 echo " - already scanned";
                 continue;
             }
+            $this->indexDocument($metaFile);
             echo " - scanned";
         }
+        $this->accountsSuppliersTable->sort("supplierId");
+        $this->accountsSuppliersTable->save();
 
     }
 

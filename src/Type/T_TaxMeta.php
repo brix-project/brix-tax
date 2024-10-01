@@ -14,13 +14,21 @@ class T_TaxMeta
 
     /**
      * The sender Name or Organization Name
+     * 
+     * Search for it in the footer of the document.
      *
      * @var string
      */
     public $senderName;
 
     /**
-     * Merchant VAT Number (Umsatzsteuer-ID, USt-IDNr.)
+     * Merchant VAT Number (Umsatzsteuer-ID, USt-IDNr. USt.Id o.ä.) or Steuernummer only if VAT Number is not available
+     * 
+     * Examples VAT Number: DE123456789, IE12345678, 122345567
+     * Examples Steuer Nummer: 122/1234/1334 (only if no VAT Number is available)
+     * 
+     * If neither VAT Number nor Steuernummer is available, set to empty string
+     * 
      * @var string
      */
     public $senderVatNumber;
@@ -28,6 +36,8 @@ class T_TaxMeta
     /**
      * The recipient name or organization name
      *
+     * Search for it in the top section of the document.
+     * 
      * @var string
      */
     public $recipientName;
