@@ -11,6 +11,8 @@ class T_TaxConfig
     public string $documents_dir = "./documents";
 
     public string $payments_dir = "./payments";
+    
+    public string $export_dir = "./export";
 
     /**
      * @var string

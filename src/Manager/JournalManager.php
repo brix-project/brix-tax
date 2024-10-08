@@ -9,17 +9,11 @@ class JournalManager
 {
 
 
-    public function __construct(public string $ownVatNr = "")
+    public function __construct()
     {
-        $this->ownVatNr = trim (strtoupper(str_replace(" ", "", $ownVatNr)));
     }
 
 
-    protected function isOwnVatNr(string $vatNr) : bool
-    {
-        $vatNr = trim (strtoupper(str_replace(" ", "", $vatNr)));
-        return $vatNr === $this->ownVatNr;
-    }
 
 
     /**
@@ -49,7 +43,7 @@ class JournalManager
             $j->net_amount_debit = null;
             $j->vat_debit = null;
         }
-        
+
         $j->vat_rate = $meta->invoiceVatRate;
         $j->counterpartyVatNumber = $meta->senderVatNumber;
         $j->description = $meta->description;
@@ -96,9 +90,8 @@ class JournalManager
         $file = phore_file($file);
         $file->set_csv(phore_dehydrate($data));
     }
-    
-    
-    public function get
+
+
 
 
 

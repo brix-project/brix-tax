@@ -101,6 +101,22 @@ class Tax extends AbstractBrixCommand
 
     }
     
+    public function export(string $from, string $to) {
+
+        $exportDir = $this->brixEnv->rootDir->withRelativePath($this->config->export_dir)->withRelativePath("{$from}__{$to}")->assertDirectory(true);
+        $scanManager = new DocumentsManager($this->brixEnv, $this->accountsSuppliersTable);
+        $scanManager->createExport($exportDir, $from, $to);
+        
+        $journalManager = $scanManager->getJournalManager($from, $to);
+        
+        $journalFile = $exportDir->withFileName("journal.csv");
+        $journalManager->updateJournal($journalFile);
+        
+        
+        
+    }
+    
+    
     public function payment_list(string $direction = "outbound", string $year = null) {
         if ($year === null) {
             $year = date("Y");

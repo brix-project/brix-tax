@@ -51,46 +51,46 @@ class DocumentsManager
         }
     }
 
-    
+
     private function idGen(string $input) :string {
         return strtoupper(preg_replace('/[\s\-_.\/]/', '', $input));
     }
-    
-    
+
+
     private function connectPayments(T_TaxMeta $meta) : T_TaxMeta{
         foreach ($this->paymentsTable->getGenerator() as $curPayment) {
             /* @var $curPayment PaymentsEntity */
             if ($curPayment->date < $meta->invoiceDate) {
                 continue;
-            }          
+            }
             if (strlen(trim ($meta->invoiceNumber)) < 4)
                 continue; // Invoice number too short
-            
+
             if ($meta->direction === "inbound" && $curPayment->amount > 0)
                 continue;
-            
+
             if ($meta->direction === "outbound" && $curPayment->amount < 0)
                 continue;
-            
 
-            
+
+
             if (strpos($this->idGen($curPayment->references), $this->idGen($meta->invoiceNumber)) === false)
                 continue;
-            
+
             if ($curPayment->invoiceFile !== "")
                 continue; // Payment already assigned
-            
+
             Out::TextSuccess("New Payment found for: $meta->file: " . $curPayment->amount);
             $meta->payments[] = new T_TaxMetaPayment($curPayment->paymentId, $curPayment->date, $curPayment->references, $curPayment->amount);
             $curPayment->invoiceFile = $meta->file;
             $curPayment->invoiceDiff = $curPayment->amount - $meta->invoiceTotal;
             $this->paymentsTable->save();
-            
+
         }
         return $meta;
     }
-    
-    
+
+
     private function indexDocument(string $yamlFile, bool $resetConnections = false) {
         $origFile = preg_replace("/\.tax\.yml$/", "", $yamlFile);
         $origFileExt = pathinfo($origFile, PATHINFO_EXTENSION);
@@ -98,11 +98,11 @@ class DocumentsManager
         $yamlFile = phore_file($yamlFile);
 
 
-        if ($resetConnections) { 
+        if ($resetConnections) {
             $data = $yamlFile->get_yaml();
             $data["payments"] = [];
             $yamlFile->set_yaml($data);
-            
+
         }
         $data = $yamlFile->get_yaml(T_TaxMeta::class);
         // Determine direction
@@ -112,15 +112,15 @@ class DocumentsManager
             $data->direction = "inbound";
         }
         $yamlFile->set_yaml((array)$data);
-        
-        
+
+
         // Validate Sums
         $sum = $data->invoiceNet + $data->invoiceVatTotal;
         if (number_format($sum, 2) != number_format($data->invoiceTotal, 2)) {
             Out::TextDanger("Sum mismatch: $sum != {$data->invoiceTotal} for **$yamlFile**");
         }
-        
-        
+
+
         // Query for VAT ID
         $supplier = $this->accountsSuppliersTable->getSupplierByVatNr($data->senderVatNumber);
         if ($supplier === null) {
@@ -141,20 +141,20 @@ class DocumentsManager
         //Out::TextInfo("Moving: $origFile -> $targetOrigFile");
         phore_file($targetOrigFile)->getDirname()->assertDirectory(true);
         phore_file($origFile)->rename($targetOrigFile);
-        
+
         // Connect Payments
         $obj = $yamlFile->get_yaml(T_TaxMeta::class);
         $obj->file = $relTargetOrigFile;
         $obj = $this->connectPayments($obj);
         $yamlFile->set_yaml($obj);
-        
+
         phore_file($yamlFile)->rename($targetMetaFile);
 
 
     }
 
     public function scan(bool $resetConnections = false) {
-        
+
         if ($resetConnections) {
             Out::TextWarning("Resetting all connections.");
             foreach ($this->paymentsTable->getGenerator() as $curPayment) {
@@ -164,7 +164,7 @@ class DocumentsManager
             }
             $this->paymentsTable->save();
         }
-        
+
         Out::TextInfo("Scanning documents in: " . $this->documentsDir);
         $i = 0;
         $iNew = 0;
@@ -181,14 +181,14 @@ class DocumentsManager
 
             Out::TextInfo("Scanning: $file");
             $data = $this->scanSingleFile($file);
-            
+
             if ($data === null) {
                 Out::TextDanger("No meta data found for: $file");
                 continue;
             }
             $iNew++;
             $this->indexDocument($metaFile, $resetConnections);
-            
+
         }
         Out::TextSuccess("Scanned $i documents. Found $iNew new documents.");
         $this->accountsSuppliersTable->sort("supplierId");
@@ -218,6 +218,34 @@ class DocumentsManager
 
         $metaFile->set_yaml((array)$taxConfig);
         return $taxConfig;
+    }
+
+
+    public function getJournalManager(string $from=null, string $till = null) : JournalManager {
+        $j =  new JournalManager();
+        foreach ($this->documentsDir->genWalk("*.tax.yml", true) as $doc) {
+            $meta = phore_file($doc)->get_yaml(T_TaxMeta::class);
+            if ($from !== null && $meta->invoiceDate < $from)
+                continue;
+            if ($till !== null && $meta->invoiceDate > $till)
+                continue;
+
+            $j->addEntry($meta);
+        }
+        return $j;
+    }
+
+
+    public function createExport(PhoreDirectory $exportDir, $fromDate, $tillDate) {
+        $journalManager = new JournalManager($this->brixEnv, $this->config->my_vat_id);
+        foreach ($this->documentsDir->genWalkr("*.tax.yml", true) as $doc) {
+            $meta = phore_file($doc)->get_yaml(T_TaxMeta::class);
+            if ($meta->invoiceDate < $fromDate || $meta->invoiceDate > $tillDate)
+                continue;
+
+            $doc->asFile()->copyTo($exportDir->withRelativePath($meta->file. ".tax.yml"));
+            $this->documentsDir->withRelativePath($meta->file)->asFile()->copyTo($exportDir->withRelativePath($meta->file));
+        }
     }
 
 
