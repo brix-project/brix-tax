@@ -22,6 +22,13 @@ class T_TaxMeta
     public $senderName;
 
     /**
+     * Leave empty
+     * 
+     * @var string|null
+     */
+    public $direction = null;
+
+    /**
      * Merchant VAT Number (Umsatzsteuer-ID, USt-IDNr. USt.Id o.ä.) or Steuernummer only if VAT Number is not available
      * 
      * Examples VAT Number: DE123456789, IE12345678, 122345567
@@ -76,6 +83,9 @@ class T_TaxMeta
 
     /**
      * The total amount of the invoice in the currency of the invoice including VAT
+     * (Brutto-Rechnungsbetrag, Brutto Betrag, Rechungsbetrag). 
+     * 
+     * This is not the payment amount, but the total amount of the invoice.
      *
      * @var float
      */
@@ -91,12 +101,17 @@ class T_TaxMeta
 
     /**
      * The VAT rate of the invoice in percent
+     * 
+     * If Tax to be paid on reverse charge basis (Reverse Charge), set this to 0
+     * 
      * @var int
      */
     public int $invoiceVatRate;
 
     /**
-     * The net amount of the invoice in the currency of the invoice
+     * The net amount of the invoice in the currency of the invoice without VAT
+     * 
+     * If Tax to be paid on reverse charge basis (Reverse Charge), set this to the invoiceTotal
      *
      * @var float
      */
@@ -116,6 +131,13 @@ class T_TaxMeta
      * @var string
      */
     public string $description;
+
+    /**
+     * Leave empty array
+     * 
+     * @var T_TaxMetaPayment[] 
+     */
+    public array $payments = [];
 
     public string $file;
 }

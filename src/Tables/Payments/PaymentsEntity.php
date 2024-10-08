@@ -49,9 +49,9 @@ class PaymentsEntity
 
     }
 
-    public string $invoiceFile = '';
+    public string $invoiceFile = "";
 
-    public float $invoiceDiff;
+    public float|null $invoiceDiff = null;
 
     public string $comment = '';
 

@@ -7,7 +7,7 @@ class T_TaxJournal
 
     public string $date;
 
-    public string $type;
+    public string $direction;
 
     public string $senderName;
 

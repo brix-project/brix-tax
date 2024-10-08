@@ -80,6 +80,14 @@ class CSVEntityTable
                     $object->$property = $value;
                 }
             }
+            
+            // Setze fehlende Spalten auf null
+            foreach ($this->columns as $column) {
+                if (!in_array($column, $header)) {
+                    $object->$column = (new \ReflectionClass($this->classString))->getDefaultProperties()[$column] ?? null;
+                }
+            }
+            
             $this->data[] = $object;
         }
 
@@ -130,14 +138,22 @@ class CSVEntityTable
         if ($handle === false) {
             throw new \Exception("Konnte die Datei nicht zum Schreiben öffnen: {$this->filePath}");
         }
-
+        
+        echo "writing $this->filePath\n";
         // Schreibe Header
         if (!empty($this->columnOrder)) {
             $header = $this->columnOrder;
         } else {
             $header = $this->columns;
         }
+        // Prüfe, ob alle Werte in $this->columns im Header existieren - falls nicht, füge sie hinzu
+        foreach ($this->columns as $column) {
+            if (!in_array($column, $header)) {
+                $header[] = $column;
+            }
+        }
 
+        
         fputcsv($handle, $header);
 
         foreach ($this->data as $object) {
@@ -232,6 +248,17 @@ class CSVEntityTable
     {
         $this->keyDefinitions[] = $columns;
     }
+    
+    /**
+     * @return \Generator<T>|T[]
+     */
+    public function getGenerator(): \Generator
+    {
+        foreach ($this->data as $object) {
+            yield $object;
+        }
+    }
+    
 
     private function validateUniqueConstraints($object, &$constaintColumns, &$constraintValues): bool
     {

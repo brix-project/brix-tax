@@ -6,6 +6,7 @@ use Brix\Core\AbstractBrixCommand;
 use Brix\Tax\Analytics\AccountOverview;
 use Brix\Tax\Analytics\TaxOverview;
 use Brix\Tax\Manager\DocumentsManager;
+use Brix\Tax\Manager\InboundPaymentsManager;
 use Brix\Tax\Manager\JournalManager;
 use Brix\Tax\Manager\ScanManager;
 use Brix\Tax\Tables\AccountsSuppliers\AccountsSuppliersEntity;
@@ -23,7 +24,7 @@ class Tax extends AbstractBrixCommand
 
     public T_TaxConfig $config;
 
-    public PhoreDirectory $scanDir;
+    public PhoreDirectory $documentsDir;
 
     public AccountsSuppliersTable $accountsSuppliersTable;
 
@@ -40,9 +41,9 @@ class Tax extends AbstractBrixCommand
     }
 
 
-    public function scan() {
+    public function scan(string $resetConnections = "") {
         $scanManager = new DocumentsManager($this->brixEnv, $this->accountsSuppliersTable);
-        $scanManager->scan();
+        $scanManager->scan($resetConnections === "yes");
     }
 
 
@@ -99,4 +100,13 @@ class Tax extends AbstractBrixCommand
         Out::Table($analytics->process($journalManager, $year));
 
     }
+    
+    public function payment_list(string $direction = "outbound", string $year = null) {
+        if ($year === null) {
+            $year = date("Y");
+        }
+        $inboundPaymentsManager = new InboundPaymentsManager($this->scanDir);
+        Out::Table($inboundPaymentsManager->getList($direction, $year));
+    }
+    
 }

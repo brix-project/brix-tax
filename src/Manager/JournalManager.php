@@ -36,22 +36,20 @@ class JournalManager
         $j->recipientName = $meta->recipientName;
         $j->invoiceNumber = $meta->invoiceNumber;
 
-        if ( ! $this->isOwnVatNr($meta->senderVatNumber)) {
+        $j->direction = $meta->direction;
+        if ($meta->direction === "inbound") {
             // Foreign Invoice -> add to debit
             $j->net_amount_debit = $meta->invoiceNet;
             $j->vat_debit = $meta->invoiceVatTotal;
             $j->net_amount_credit = null;
             $j->vat_credit = null;
-            $j->type = "inbound invoice";
         } else {
             $j->net_amount_credit = $meta->invoiceNet;
             $j->vat_credit = $meta->invoiceVatTotal;
             $j->net_amount_debit = null;
             $j->vat_debit = null;
-            $j->type = "outbound invoice";
         }
-
-
+        
         $j->vat_rate = $meta->invoiceVatRate;
         $j->counterpartyVatNumber = $meta->senderVatNumber;
         $j->description = $meta->description;
@@ -98,6 +96,9 @@ class JournalManager
         $file = phore_file($file);
         $file->set_csv(phore_dehydrate($data));
     }
+    
+    
+    public function get
 
 
 
