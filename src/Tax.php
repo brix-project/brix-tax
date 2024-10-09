@@ -5,6 +5,7 @@ namespace Brix\Tax;
 use Brix\Core\AbstractBrixCommand;
 use Brix\Tax\Analytics\AccountOverview;
 use Brix\Tax\Analytics\TaxOverview;
+use Brix\Tax\Analytics\UstWertblatt;
 use Brix\Tax\Manager\DocumentsManager;
 use Brix\Tax\Manager\InboundPaymentsManager;
 use Brix\Tax\Manager\JournalManager;
@@ -112,7 +113,16 @@ class Tax extends AbstractBrixCommand
         $journalFile = $exportDir->withFileName("journal.csv");
         $journalManager->updateJournal($journalFile);
         
+        $accountOverview = new AccountOverview();
+        $exportDir->withFileName("account_overview.csv")->set_csv($accountOverview->process($journalManager, date("Y", strtotime($from))));
         
+        $taxOverview = new TaxOverview();
+        $exportDir->withFileName("tax_overview.csv")->set_csv($taxOverview->process($journalManager, date("Y", strtotime($from))));
+        
+        $ustWertblatt = new UstWertblatt();
+        $exportDir->withFileName("ust_wertblatt.csv")->set_csv($ustWertblatt->process($journalManager, "outbound"));
+        
+        $exportDir->withFileName("vorsteueraufstellung.csv")->set_csv($ustWertblatt->process($journalManager, "inbound"));
         
     }
     

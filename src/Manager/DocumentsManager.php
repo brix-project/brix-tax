@@ -238,7 +238,7 @@ class DocumentsManager
 
     public function createExport(PhoreDirectory $exportDir, $fromDate, $tillDate) {
         $journalManager = new JournalManager($this->brixEnv, $this->config->my_vat_id);
-        foreach ($this->documentsDir->genWalkr("*.tax.yml", true) as $doc) {
+        foreach ($this->documentsDir->genWalk("*.tax.yml", true) as $doc) {
             $meta = phore_file($doc)->get_yaml(T_TaxMeta::class);
             if ($meta->invoiceDate < $fromDate || $meta->invoiceDate > $tillDate)
                 continue;
