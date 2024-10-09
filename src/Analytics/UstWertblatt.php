@@ -28,7 +28,7 @@ class UstWertblatt
             }      
             else {
                 $r->customerName = $entry->senderName;
-                   $r->netAmount = $entry->net_amount_debig;
+                   $r->netAmount = $entry->net_amount_debit;
                 $r->vatRate = $entry->vat_rate;
                 $r->vatAmount = $entry->vat_debit;
                 $r->totalAmount = $entry->net_amount_debit + $entry->vat_debit;
