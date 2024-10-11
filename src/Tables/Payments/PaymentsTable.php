@@ -26,6 +26,7 @@ class PaymentsTable extends CSVEntityTable
         }
         $payment->paymentId = $this->getNextId($payment->date);
         $this->addObject($payment);
+        $this->sort("date", "desc");
         $this->save();
     }
 
