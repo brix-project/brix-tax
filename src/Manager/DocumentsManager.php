@@ -238,13 +238,19 @@ class DocumentsManager
 
     public function createExport(PhoreDirectory $exportDir, $fromDate, $tillDate) {
         $journalManager = new JournalManager($this->brixEnv, $this->config->my_vat_id);
+        $targetOutbound = $exportDir->withRelativePath("outbound")->assertDirectory(true);
+        $targetInbound = $exportDir->withRelativePath("inbound")->assertDirectory(true);
         foreach ($this->documentsDir->genWalk("*.tax.yml", true) as $doc) {
             $meta = phore_file($doc)->get_yaml(T_TaxMeta::class);
             if ($meta->invoiceDate < $fromDate || $meta->invoiceDate > $tillDate)
-                continue;
-
-            $doc->asFile()->copyTo($exportDir->withRelativePath($meta->file. ".tax.yml"));
-            $this->documentsDir->withRelativePath($meta->file)->asFile()->copyTo($exportDir->withRelativePath($meta->file));
+                continue;            
+            $targetDir = $targetInbound;
+            if ($meta->direction === "outbound")
+                $targetDir = $targetOutbound;
+            
+            $targetFileName = $meta->invoiceDate . "__" . phore_slugify($meta->invoiceNumber);
+            
+            $this->documentsDir->withRelativePath($meta->file)->asFile()->copyTo($targetDir->withFileName($targetFileName, phore_file($meta->file)->getExtension()));
         }
     }
 
