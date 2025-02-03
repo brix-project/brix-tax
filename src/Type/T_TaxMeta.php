@@ -29,14 +29,14 @@ class T_TaxMeta
     public $direction = null;
 
     /**
-     * Merchant VAT Number (Umsatzsteuer-ID, USt-IDNr. USt.Id o.ä.) or Steuernummer only if VAT Number is not available
+     * Merchant VAT Number (Umsatzsteuer-ID, USt-IDNr. USt.Id o.ä.) or Steuernummer (St.-Nr.:, Steuernummer: etc) only if VAT Number is not available
      * 
-     * Examples VAT Number: DE123456789, IE12345678, 122345567
-     * Examples Steuer Nummer: 122/1234/1334 (only if no VAT Number is available)
+     * Example: VAT Number: DE123456789, IE12345678, 122345567
+     * Example: Steuernummer: 122/1234/1334 or 1234567890 (only if no VAT Number is available)
      * 
      * If neither VAT Number nor Steuernummer is available, set to empty string
      * 
-     * If there are multiple VAT Numbers on the document, take the one from the footer!
+     * If there are multiple VAT Numbers or Steuernummern on the document, take the one from the footer!
      * 
      * @var string
      */
