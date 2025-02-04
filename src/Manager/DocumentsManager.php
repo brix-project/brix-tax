@@ -131,6 +131,7 @@ class DocumentsManager
             $this->accountsSuppliersTable->save();
             Out::TextSuccess("Added new supplier: " . $supplier->supplierId);
         }
+        $origFileExt = strtolower($origFileExt);
         $invYear = date("Y", strtotime($data->invoiceDate));
         $invDate = date("Y-m-d", strtotime($data->invoiceDate));
         $invoiceNumberSlug = preg_replace("/[^a-zA-Z0-9]/", "", $data->invoiceNumber);
@@ -169,7 +170,7 @@ class DocumentsManager
         $i = 0;
         $iNew = 0;
         foreach ($this->documentsDir->genWalk("*.*", true) as $file) {
-            if ( ! preg_match("/\.(pdf|docx|doc|jpg|png|jpeg)$/", $file)) {
+            if ( ! preg_match("/\.(pdf|docx|doc|jpg|png|jpeg)$/i", $file)) {
                 continue;
             }
             $metaFile = phore_file($file . ".tax.yml");
