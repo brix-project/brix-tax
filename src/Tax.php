@@ -135,7 +135,7 @@ class Tax extends AbstractBrixCommand
         Out::Table($list = $inboundPaymentsManager->getList($direction, $year));
         $outByMonth = [];
         foreach ($list as $item) {
-            $month = date("Y-m", strtotime($item["Due Date"]));
+            $month = date("Y-m", strtotime($item["Invoice Date"]));
             if ( ! isset($outByMonth[$month])) {
                 $outByMonth[$month] = [
                     "Month" => $month,
@@ -151,6 +151,9 @@ class Tax extends AbstractBrixCommand
             $outByMonth[$month]["Open"] += $item["Invoice Amount"] - $item["Amount Paid"];
             
         }
+        
+        // Sort by Month
+        ksort($outByMonth);
         
         Out::Table($outByMonth);
     }
