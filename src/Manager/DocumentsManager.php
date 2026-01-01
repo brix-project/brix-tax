@@ -146,7 +146,10 @@ class DocumentsManager
         // Connect Payments
         $obj = $yamlFile->get_yaml(T_TaxMeta::class);
         $obj->file = $relTargetOrigFile;
+        
+        // Connect the Payments
         $obj = $this->connectPayments($obj);
+        
         $yamlFile->set_yaml($obj);
 
         phore_file($yamlFile)->rename($targetMetaFile);
