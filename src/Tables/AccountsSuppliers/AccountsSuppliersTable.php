@@ -36,6 +36,12 @@ class AccountsSuppliersTable extends CSVEntityTable
         $vatId = $this->normalizeVatNumber($vatId);
         return $this->select(["vatId" => $vatId]);
     }
+
+    public function getSupplierById(string $supplierId): ?AccountsSuppliersEntity
+    {
+        return $this->select(["supplierId" => $supplierId]);
+    }
+
     public function nextId() {
         $maxId = 0;
         foreach ($this->getData() as $row) {

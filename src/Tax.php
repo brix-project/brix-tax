@@ -4,6 +4,7 @@ namespace Brix\Tax;
 
 use Brix\Core\AbstractBrixCommand;
 use Brix\Tax\Analytics\AccountOverview;
+use Brix\Tax\Analytics\BwaGenerator;
 use Brix\Tax\Analytics\TaxOverview;
 use Brix\Tax\Analytics\UstWertblatt;
 use Brix\Tax\Manager\DocumentsManager;
@@ -86,6 +87,36 @@ class Tax extends AbstractBrixCommand
         Out::Table($analytics->process($journalManager, $year));
 
     }
+    public function bwa(int $year = null) {
+        if ($year === null) {
+            $year = (int)date("Y");
+        }
+
+        $journalManager = new JournalManager();
+        foreach ($this->scanDir->genWalk("*.tax.yml", true) as $file) {
+            $meta = phore_file($file)->get_yaml(T_TaxMeta::class);
+            $journalManager->addEntry($meta);
+        }
+
+        $endDate = sprintf('%d-12-31', $year);
+        if ($year === (int)date('Y')) {
+            $endDate = date('Y-m-t', strtotime('first day of last month'));
+        }
+
+        $costTypesFile = (string)$this->brixEnv->rootDir->withFileName("accounts-kostenarten.csv");
+        $generator = new BwaGenerator($this->accountsSuppliersTable, $costTypesFile);
+        $rows = $generator->process($journalManager, (string)$year, $endDate);
+        $amountWidth = max(array_map(fn(array $row): int => mb_strwidth($row['Nettobetrag']), $rows));
+        foreach ($rows as &$row) {
+            $row['Nettobetrag'] = str_repeat(' ', $amountWidth - mb_strwidth($row['Nettobetrag'])) . $row['Nettobetrag'];
+        }
+        unset($row);
+
+        $formattedEndDate = date('d.m.Y', strtotime($endDate));
+        echo "BWA-Export vom 01.01.$year bis $formattedEndDate\n\n";
+        Out::Table($rows);
+    }
+
     public function account_overview (int $year = null) {
         if ($year === null) {
             $year = date("Y");

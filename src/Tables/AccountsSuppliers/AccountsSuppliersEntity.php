@@ -21,7 +21,9 @@ class AccountsSuppliersEntity
         public string  $name,
         public string  $vatId,
     
-        public string  $lastSeen
+        public string  $lastSeen,
+
+        public ?string $kostenartKey = null
     )
     {
         // Clean VAT Number (replay non alpha numeric characters)
