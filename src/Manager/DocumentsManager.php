@@ -77,11 +77,21 @@ class DocumentsManager
             if (strpos($this->idGen($curPayment->references), $this->idGen($meta->invoiceNumber)) === false)
                 continue;
 
-            if ($curPayment->invoiceFile !== "")
-                continue; // Payment already assigned
+            if ($curPayment->invoiceFile !== "" && $curPayment->invoiceFile !== $meta->file)
+                continue; // Payment assigned to another invoice
 
-            Out::TextSuccess("New Payment found for: $meta->file: " . $curPayment->amount);
-            $meta->payments[] = new T_TaxMetaPayment($curPayment->paymentId, $curPayment->date, $curPayment->references, $curPayment->amount);
+            $paymentAlreadyConnected = false;
+            foreach ($meta->payments as $connectedPayment) {
+                if ($connectedPayment->paymentId === $curPayment->paymentId) {
+                    $paymentAlreadyConnected = true;
+                    break;
+                }
+            }
+
+            if (!$paymentAlreadyConnected) {
+                Out::TextSuccess("New Payment found for: $meta->file: " . $curPayment->amount);
+                $meta->payments[] = new T_TaxMetaPayment($curPayment->paymentId, $curPayment->date, $curPayment->references, $curPayment->amount);
+            }
             $curPayment->invoiceFile = $meta->file;
             $curPayment->invoiceDiff = $curPayment->amount - $meta->invoiceTotal;
             $this->paymentsTable->save();
